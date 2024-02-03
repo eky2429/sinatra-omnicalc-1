@@ -1,5 +1,6 @@
 require "sinatra"
 require "sinatra/reloader"
+require "active_support/all"
 
 get("/") do
   erb(:home)
@@ -21,35 +22,45 @@ get("/payment/new") do
   erb(:payment)
 end
 
-get("/square?num=:num") do
-  num = params.fetch("num").to_i
-
-  @result = pow(num, 2)
+get("/square") do
+  if (params.fetch("num").to_i == params.fetch("num").to_f)
+    @num = params.fetch("num").to_i
+    @result = @num * @num
+  else
+    @num = params.fetch("num").to_f
+    @result = (@num ** 2).to_fs(:percentage, { :precision => 4 } )
+  end
   erb(:results)
 end
 
-get("/square_root?num=:num") do
-  num = params.fetch("num").to_i
+get("/square_root") do
+  @num = params.fetch("num").to_f
 
-  @result = pow(num, 0.5)
+  @result = Math.sqrt(@num)
+  if ( @result.to_i  == @result)
+    @result = @result.to_i
+  else
+    @result = @result.to_fs(:percentage, { :precision => 4 } )
+  end
   erb(:results)
 end
 
-get("/random?min=:min&max=:max") do
-  min = params.fetch("min").to_i
-  max = params.fetch("max").to_i
+get("/random") do
+  @min = params.fetch("min").to_f
+  @max = params.fetch("max").to_f
 
-  @result = rand(min..max)
-  erb(:results)
+  @result = rand(@min..@max)
+  erb(:results3)
 end
 
-get("/payment?apr=:apr&years=:years&value=:value") do
-  apr = params.fetch("apr").to_f / 12 / 100
-  period = params.fetch("years").to_i * 12
-  value = params.fetch("value").to_i
+get("/payment") do
+  @apr = (params.fetch("apr").to_f / 12 / 100)
+  @period = params.fetch("years").to_i * 12
+  @value = params.fetch("value").to_f
 
-  numerator = value * apr
-  denominator = 1 - pow(1 + apr, -period)
-  @result = numerator / denominator
-  erb(:results)
+  numerator = @value * @apr
+  denominator = 1 - ((1 + @apr) ** (-@period))
+  @result = (numerator / denominator).to_fs(:currency, {:precision => 2})
+  @apr = @apr.to_fs(:percentage, {:precision => 4})
+  erb(:results4)
 end
